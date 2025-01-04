@@ -347,9 +347,9 @@ Building something is obviously a much slower process than reading or watching a
 
 It is a much deeper and more involved experience however, which I find activates my brain in a completely different way. Actively asking questions and exploring ideas rather than simply consuming them forces me to really understand what is going on. 
 
-Despite not using Python for over a decade, with a little help from Github Copilot I was able to make rapid progress. [Pytorch](https://pytorch.org/) with [einops](https://github.com/arogozhnikov/einops) in particular was really intuitive and fun to work with and I think anyone with a little programming knowledge would find them easy to pick up.
+Despite not using Python for over a decade, with a little help from Github Copilot I was able to make rapid progress. [PyTorch](https://pytorch.org/) with [einops](https://github.com/arogozhnikov/einops) in particular was really intuitive and fun to work with and I think anyone with a little programming knowledge would find them easy to pick up.
 
-I have a [repo with the bare dev container](https://github.com/Ryan-Palmer/PyTorch-DevContainer) which you can use to spin up a fully configured Python / Pytorch environment if you would like to take it for a spin.
+I have a [repo with the bare dev container](https://github.com/Ryan-Palmer/PyTorch-DevContainer) which you can use to spin up a fully configured Python / PyTorch environment if you would like to take it for a spin.
 
 ### Music Generation
 
