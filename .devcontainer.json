@@ -35,7 +35,7 @@
 	// Uncomment the next line if you want to keep your containers running after VS Code shuts down.
 	// "shutdownAction": "none",
 
-	"postCreateCommand": "gem install jekyll bundler && jekyll new ." // This happens after the /docs dir is mounted
+	"postCreateCommand": "gem install jekyll bundler && bundle install" // This happens after the /docs dir is mounted
 
 	// Configure tool-specific properties.
 	// "customizations": {},
