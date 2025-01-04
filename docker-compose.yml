@@ -2,7 +2,7 @@ services:
   app:
     image: ruby:3.3
     command: /bin/sh -c "sleep infinity"
-    # Works but doesn't output to console
+    # Works but doesn't output to dev container console
     # command: /bin/sh -c 'bundle exec jekyll serve --livereload' --path /docs 
     volumes:
       - ./docs:/docs
