@@ -17,7 +17,7 @@ We will look at topics such as
 I am going to try to keep it quite high level, but for those interested in taking a look under the covers and digging through code you can [grab the workbooks from my Github](https://github.com/Ryan-Palmer/MIDIGen).
 
 ### Motivation
-In 2013 I wrote my [university dissertation](https://1drv.ms/b/c/91fc7a2609794446/EUZEeQkmevwggJEZBQAAAAABtwH2qjO3hw2U96w6LA3Ytw?e=p5ilV1) on the topic of generative music. This culminated in a [prototype instrument](https://www.youtube.com/watch?v=J-LFz0P3Uto&t=89s&ab_channel=RyanPalmer), coded first in [MaxMSP](https://cycling74.com/) and then [Python](https://www.python.org/), which captured statistics about a performance and then generated more music in the same style.
+In 2013 I wrote my [university dissertation](https://1drv.ms/b/c/91fc7a2609794446/EUZEeQkmevwggJEZBQAAAAABtwH2qjO3hw2U96w6LA3Ytw?e=p5ilV1) on the topic of generative music. This culminated in a [prototype instrument](https://www.youtube.com/watch?v=J-LFz0P3Uto&ab_channel=RyanPalmer), coded first in [MaxMSP](https://cycling74.com/) and then [Python](https://www.python.org/), which captured statistics about a performance and then generated more music in the same style.
 
 At the time, machine learning and artificial intelligence were terms more often discussed in academia or even sci-fi rather than business or software circles. Fast forward 11 years and the world looks rather different. We are witnessing an explosion of technology and ideas which are at once exciting for the capabilities they unlock, and also often overwhelming or worrying for the change they bring.
 
