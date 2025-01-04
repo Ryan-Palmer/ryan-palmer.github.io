@@ -1,0 +1,6 @@
+services:
+  app:
+    build: .
+    command: /bin/sh -c "sleep infinity"
+    volumes:
+      - ./src:/src
