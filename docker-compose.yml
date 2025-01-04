@@ -2,5 +2,7 @@ services:
   app:
     build: .
     command: /bin/sh -c "sleep infinity"
+    # Works but doesn't output to console
+    # command: /bin/sh -c 'bundle exec jekyll serve --livereload' --path /src 
     volumes:
       - ./src:/src
