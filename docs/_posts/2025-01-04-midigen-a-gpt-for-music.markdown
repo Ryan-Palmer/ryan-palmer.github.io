@@ -283,7 +283,7 @@ The second modification is to actually have a database of *all* previous `key`s 
 
 We only apply this to a single layer near the output of the model.
 
-> The vector index which allow us to look up the most similar keys is [Faiss](https://faiss.ai/) from Meta. It can be used completely on the GPU which makes it super fast.
+> The vector index which allowed me to look up the most similar keys is [Faiss](https://faiss.ai/) from Meta. It can be run completely on the GPU which makes it super fast.
 
 ## Batches
 
