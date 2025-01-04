@@ -23,7 +23,7 @@ email: ryanpalmermultimedia@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   A collection of blogs, projects, and other things I've worked on.
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://ryan-palmer.github.io/" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: teknikal_wizard
 github_username:  Ryan-Palmer
 
@@ -31,7 +31,7 @@ github_username:  Ryan-Palmer
 theme: minima
 plugins:
   - jekyll-feed
-
+  - jekyll-sitemap
 # Exclude from processing.
 # The following items will not be processed, by default.
 # Any item listed under the `exclude:` key here will be automatically added to
