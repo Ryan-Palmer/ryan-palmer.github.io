@@ -35,10 +35,9 @@
 	// Uncomment the next line if you want to keep your containers running after VS Code shuts down.
 	// "shutdownAction": "none",
 
-	// Uncomment the next line to run commands after the container is created.
 	"postCreateCommand": "gem install jekyll bundler && jekyll new .",
 
-	"postStartCommand": "bundle exec jekyll serve --watch"
+	"postStartCommand": "bundle exec jekyll serve --livereload"
 
 	// Configure tool-specific properties.
 	// "customizations": {},
