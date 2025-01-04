@@ -15,7 +15,7 @@
 
 	// The optional 'workspaceFolder' property is the path VS Code should open by default when
 	// connected. This is typically a file mount in .devcontainer/docker-compose.yml
-	"workspaceFolder": "/src",
+	"workspaceFolder": "/docs",
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -35,7 +35,7 @@
 	// Uncomment the next line if you want to keep your containers running after VS Code shuts down.
 	// "shutdownAction": "none",
 
-	"postCreateCommand": "gem install jekyll bundler && jekyll new ." // This happens after the /src dir is mounted
+	"postCreateCommand": "gem install jekyll bundler && jekyll new ." // This happens after the /docs dir is mounted
 
 	// Configure tool-specific properties.
 	// "customizations": {},
