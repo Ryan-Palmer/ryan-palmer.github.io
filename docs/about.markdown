@@ -4,15 +4,8 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+A developer and sound engineer working out of his cabin in Cornwall, England.
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
+My previous posts can be found on the [CompositionalIT website](https://www.compositional-it.com/news-blog/author/ryan/).
 
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
-
-
-[jekyll-organization]: https://github.com/jekyll
+Drop me a message at <ryanpalmermultimeda@gmail.com> or [connect with me](https://www.linkedin.com/in/ryan-palmer-281262b4/) on LinkedIn.
