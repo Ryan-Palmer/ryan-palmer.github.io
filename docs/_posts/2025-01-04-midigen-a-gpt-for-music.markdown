@@ -257,7 +257,9 @@ If we feed that output sequence back in to the model, we get the *next* token an
 
 Our model input (context) length is capped at the size we chose when we selecting its parameters, so if our generated sequence exceeds this we will need to truncate the oldest tokens.
 
-A fun subjective test was to take the intro from a song that the model hadn't seen and ask it to continue it. Even with the relatively small video game data set, this showed some promise and would often generate quite musical and suitable passages. One thing that was apparent however was that once tokens had moved outside the context window, they would be forgotten. This prevented incorporation of longer themes and refrains in the music and prevented the model really getting the overall essence of the piece. The model needed some kind of memory.
+A fun subjective test was to take the intro from a song that the model hadn't seen and ask it to continue it. Even with the relatively small video game data set, this showed some promise and would often generate quite musical and suitable passages. 
+
+One thing that was apparent however was that once tokens had moved outside the context window, they would be forgotten. This prevented incorporation of longer themes and refrains in the music and prevented the model really getting the overall essence of the piece. The model needed some kind of memory.
 
 ## Transformer Memory
 
