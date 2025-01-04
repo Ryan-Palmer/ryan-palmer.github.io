@@ -139,7 +139,7 @@ Until this point, generative models such as [Recurrent Neural Networks](https://
 
 2. They had to process tokens in sequence order which meant they did not parallelise easily, making them slow to train. It also restricted the models to only using *past* tokens to predict the future (although this could be worked around with [Bi-directional RNNS](https://en.wikipedia.org/wiki/Bidirectional_recurrent_neural_networks) for a further performance cost).
 
-Transformers solve these problems by looking at an entire sequence at once, considering the meaning of words and the relationships between them.
+Transformers solve these problems by looking at an entire sequence at once, considering both the meaning of tokens and the relationships between them.
 
 Because we are making a 'next token generator' we shall employ a single-sequence flavour of transformer known as 'decoder only'. This is in contrast to 'encoder-only' which are used to extract meaning from / classify tokens in a sequence, and 'encoder-decoder' which are used for translation tasks (e.g. converting one sequence into another).
 
