@@ -4,17 +4,41 @@ title:  "Document Extraction with Microsoft Agent Framework"
 date:   2025-11-03 13:51:46 +0000
 ---
 
-# Introduction
+# The task
 
-- State use case immediately: "Extracting structured contract details from PDF files"
-- Why agentic? Because loosely specified, hard to deterministically code, requires contextual doc understanding.
-- Why MAF? Evolution of AutoGen and SK, based on primitives, use any model anywhere, enterprise features with AIFoundry (Entra, billing, content management, monitoring etc).
+I was recently presented with a great task at [Wieldmore](https://www.wieldmore.com/). I say great because it felt like the perfect combination of challenging but tractable.
 
-# How to access LLM?
-    - Local with LM Studio
-        - Gemma3 (vision)
-        - Qwen3
-        
+The question, at least on the surface, was simple - can we use AI to speed up the time consuming, manual process of looking through financial contract PDFs and picking out the values and terms for booking into our analytics platform, [Pomelo](https://www.wieldmore.com/pomelo).
+
+This kind of task is a great use case for LLMs / v(ision)LLMs as it leans into their strengths - understanding the context of a document. It is also something for which it would be extremely difficult if not impossible to program a manual routine - the variation in layout and content of the documents is just too vast to parse deterministically.
+
+
+# Getting started
+
+Throughout 2025 the tools and capabilities of models and frameworks have been developed at what feels like breakneck speed. It can feel a bit overwhelming and hard to know where to start.
+
+I began by breaking the task into a series of questions:
+
+- How can I access LLMs?
+- What APIs are available?
+- How do I configure their behaviour?
+- How do I pass them data?
+- How do I know they are working correctly?
+
+Attempting to answer these questions has really helped me to understand the ecosystems and tooling available, which I found surprisingly accessible and intuitive once I got hands on with them.
+
+
+# How to access LLMs?
+
+Perhaps the most obvious first question was "Where can I access LLMs for experimentation?".
+
+We have a choice of running them locally or remotely.
+
+I am lucky enough to have a pretty capable PC which can run many of the open source models available on platforms such as [Hugging Face](https://huggingface.co/) and I figured "If I can get it working on a small, local model then a large, remote model should have no problem".
+
+I did briefly experiment with [Ollama](https://ollama.com/) along with [OpenWebUI](https://openwebui.com/) for local model hosting and configuration, but I really enjoyed the experience of using [LM Studio](https://lmstudio.ai/) so selected this as my local model hosting solution. It has a really intuitive interface which makes discovering, installing and experimenting with models a breeze.
+
+
 # How to get data out of PDFs?
     - Text extraction with PDFPig (?)
     - Image extraction (with ?) and recognition with vision model
