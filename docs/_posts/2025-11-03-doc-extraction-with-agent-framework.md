@@ -38,10 +38,31 @@ I am lucky enough to have a pretty capable PC which can run many of the open sou
 
 I did briefly experiment with [Ollama](https://ollama.com/) along with [OpenWebUI](https://openwebui.com/) for local model hosting and configuration, but I really enjoyed the experience of using [LM Studio](https://lmstudio.ai/) so selected this as my local model hosting solution. It has a really intuitive interface which makes discovering, installing and experimenting with models a breeze.
 
+For the upcoming experiments I needed models which supported vision, reasoning and tool use.
+
+I did a quick run of experiments against the top models available in LM Studio and it became pretty obvious that the best vision model I could run was by far [Gemma 3 27B](https://lmstudio.ai/models/google/gemma-3-27b).
+
+It was also great at reasoning and ok with tool use, however I also had strong results here with [Qwen3 32B](https://lmstudio.ai/models/qwen/qwen3-32b).
+
+> Since then many other models have been released, such as OpenAI's GPT OSS 120B which is much more resource intensive but can still be run on a high-end home PC.
+
 
 # How to get data out of PDFs?
-    - Text extraction with PDFPig (?)
-    - Image extraction (with ?) and recognition with vision model
+
+PDF is a notoriously difficult format to work with. It is more of an image than a document, although it has elements of both.
+
+My first instinct was to try to extract the text from the document.
+
+Although a .NET and web developer by trade, I often turn to Python when working with ML / AI projects. For this project however, I decided see what Microsoft had available. This would facilitate integration with our existing F# / Azure stack.
+
+I found a great library called [PDFPig](https://github.com/UglyToad/PdfPig) which supported text extraction from PDFs in .NET. It uses a number of algorithms to determine the arrangement of the text and chunks it along with x/y coordinates deternining it's position on the page.
+
+As effective as the library was, I found that the data quickly exceeded the context length of the LM Studio models on my machine.
+
+I decided to try feeding images of the PDFs directly to Gemma 3, as it is a vLLM. It showed strong performance compared to the text extraction approach, getting the details mostly correct, most of the time. Given the tiny size of this model, I felt this was very encouraging.
+
+
+
 
 # How to give data to LLM?
     - RAG
