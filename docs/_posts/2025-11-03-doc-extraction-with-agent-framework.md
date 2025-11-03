@@ -47,21 +47,34 @@ It was also great at reasoning and ok with tool use, however I also had strong r
 > Since then many other models have been released, such as OpenAI's GPT OSS 120B which is much more resource intensive but can still be run on a high-end home PC.
 
 
+# Microsoft Agent Framework
+
+Although a .NET and web developer by trade, I often turn to Python when working with ML / AI projects. For this project however, I decided see what Microsoft had available. This would facilitate integration with our existing F# / Azure stack.
+
+As is often the case, they had a vast array of slightly confusingly overlapping and loosely defined products and services at various levels of abstraction. To add to the fun, many of them were in preview and only partially documented.
+
+At the time I started the project, the framework which formed the core, 'AI primitives' foundation of the stack was [Semantic Kernel](https://learn.microsoft.com/en-us/semantic-kernel/overview/).
+
+This has been around for a while and had recently spawned it's [Agent Framework](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/?pivots=programming-language-csharp) which embraced the building blocks famousely laid out in Anthropic's [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) paper.
+
+As I progressed through the project, the new [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/agent-framework-overview) was announced.
+
+Whilst this did initially bring to mind the famous XKCD on [Standards](https://xkcd.com/927/), it actually allows the SK team to merge with the [AutoGen](https://microsoft.github.io/autogen/stable//index.html) folk to work on a unified, modern platform.
+
+There is an awesome [series of videos](https://www.youtube.com/playlist?list=PLhGl0l5La4sYXjYOBv7h9l7x6qNuW34Cx) on YouTube which show practical examples of migration process from SK and how to use all the features of the new framework. I'd highly recommed it as your first point of call for any more information on the approaches discussed in this blog.
+
+
 # How to get data out of PDFs?
 
 PDF is a notoriously difficult format to work with. It is more of an image than a document, although it has elements of both.
 
 My first instinct was to try to extract the text from the document.
 
-Although a .NET and web developer by trade, I often turn to Python when working with ML / AI projects. For this project however, I decided see what Microsoft had available. This would facilitate integration with our existing F# / Azure stack.
-
 I found a great library called [PDFPig](https://github.com/UglyToad/PdfPig) which supported text extraction from PDFs in .NET. It uses a number of algorithms to determine the arrangement of the text and chunks it along with x/y coordinates deternining it's position on the page.
 
 As effective as the library was, I found that the data quickly exceeded the context length of the LM Studio models on my machine.
 
 I decided to try feeding images of the PDFs directly to Gemma 3, as it is a vLLM. It showed strong performance compared to the text extraction approach, getting the details mostly correct, most of the time. Given the tiny size of this model, I felt this was very encouraging.
-
-
 
 
 # How to give data to LLM?
