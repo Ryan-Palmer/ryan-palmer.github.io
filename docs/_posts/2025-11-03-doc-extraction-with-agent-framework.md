@@ -25,7 +25,7 @@ I began by breaking the task into a series of questions:
 - How do I pass them data?
 - How do I know they are working correctly?
 
-Attempting to answer these questions has really helped me to understand the ecosystems and tooling available, which I found surprisingly accessible and intuitive once I got hands on with them.
+Attempting to answer them has really helped me to understand the ecosystems and tooling available, which I found surprisingly accessible and intuitive once I got hands on.
 
 
 # How to access LLMs?
