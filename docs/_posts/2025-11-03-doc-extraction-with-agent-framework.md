@@ -53,9 +53,9 @@ Although a .NET and web developer by trade, I often turn to Python when working 
 
 As is often the case, they had a vast array of slightly confusingly overlapping and loosely defined products and services at various levels of abstraction. To add to the fun, many of them were in preview and only partially documented.
 
-At the time I started the project, the framework which formed the core, 'AI primitives' foundation of the stack was [Semantic Kernel](https://learn.microsoft.com/en-us/semantic-kernel/overview/).
+At the time I started the project, the framework which formed the core of the stack was [Semantic Kernel](https://learn.microsoft.com/en-us/semantic-kernel/overview/).
 
-This has been around for a while and had recently spawned it's [Agent Framework](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/?pivots=programming-language-csharp) which embraced the building blocks famousely laid out in Anthropic's [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) paper.
+This has been around for a while and had recently spawned it's [Agent Framework](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/?pivots=programming-language-csharp) which embraced the building blocks famously laid out in Anthropic's [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) paper.
 
 As I progressed through the project, the new [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/agent-framework-overview) was announced.
 
@@ -70,33 +70,59 @@ PDF is a notoriously difficult format to work with. It is more of an image than 
 
 My first instinct was to try to extract the text from the document.
 
-I found a great library called [PDFPig](https://github.com/UglyToad/PdfPig) which supported text extraction from PDFs in .NET. It uses a number of algorithms to determine the arrangement of the text and chunks it along with x/y coordinates deternining it's position on the page.
+I found a richly featured library called [PDFPig](https://github.com/UglyToad/PdfPig) which supported text extraction from PDFs in .NET. It uses a number of algorithms to determine the arrangement of the text and chunks it along with x/y coordinates determining its position on the page.
 
 As effective as the library was, I found that the data quickly exceeded the context length of the LM Studio models on my machine.
 
-I decided to try feeding images of the PDFs directly to Gemma 3, as it is a vLLM. It showed strong performance compared to the text extraction approach, getting the details mostly correct, most of the time. Given the tiny size of this model, I felt this was very encouraging.
+
+# Retrieval Augmented Generation (RAG)
+
+The excessive size of the complete document content overflowing the context led to me experimenting with Retrieval Augmented Generation (RAG). This is just a fancy name for storing data in a database, usually with vector embedding support, and searching for relevant information when needed rather than trying to cram it all into the model's short term memory.
+
+> An [embedding](https://www.datacamp.com/blog/vector-embedding) is essentially a numerical representation of the 'meaning' of an item of data, allowing you to understand how they are related.
+
+Semantic Kernel provided a 'connector' for a vector database called [Qdrant](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/qdrant-connector?pivots=programming-language-csharp) which simplifies connecting to and interacting with an instance.
+
+> You can launch Qdrant easily [using Docker](https://qdrant.tech/documentation/quickstart/)
+
+I manually serialised the extracted document chunks and posted them to the LM Studio [embedding endpoint](https://lmstudio.ai/docs/python/embedding) to get their vectors. A DTO model was [defined with attributes](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/qdrant-connector?pivots=programming-language-csharp#property-name-override) from `Microsoft.Extensions.VectorData` identifying the primary key, data and the embedding fields which allows data to be inserted into the Qdrant store and subsequently queried and rehydrated.
+
+With all this set up, I could embed a query, such as "What is the notional amount of the swap?", and search Qdrant for document chunks which are related to the query. This dramatically reduces the amount of data you need to send to the LLM, as in theory you have filtered for relevant information. It could also, again theoretically, improve the quality of results as you have kept the LLM's attention on the important stuff.
+
+# Agentic Search
+
+Initial tests showed some success, but naturally led to the question of how many results to ask for? Too few and you might not get the info you need, and too many will add noise and defeat the point.
+
+One answer to this is rather than search for the chunks ourselves, just give the LLM a tool which allows it to search the store for itself and instruct it to keep searching until it finds what it needs. Semantic Kernel makes this easy by passing the Qdrant store to an instance of their [VectorStoreTextSearch plugin](https://learn.microsoft.com/en-us/semantic-kernel/concepts/text-search/text-search-vector-stores?pivots=programming-language-csharp#using-a-vector-store-with-text-search) which can then be registered as a tool for the LLM.
+
+I also sped up the process of embedding the documents by implementing an [`IEmbeddingGenerator`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.ai.iembeddinggenerator-2?view=net-9.0-pp) tailored to the LM Studio embedding API. By passing this to the Qdrant connector the embeddings would be automatically requested and populated when inserting an item.
 
 
-# How to give data to LLM?
-    - RAG
-        - Embed
-        - Vector Store
-        - Search Tool
-        - Author / Critic
-    - All in context
+# Vision!
 
-# Solution
-    - GPT-5-Mini hosted in AI Foundry
-    - OpenAPI Responses API allows direct PDF bytes upload - text extraction and image recognition all done server-side
-    - All in context - a few pages (270KB) of PDF not too much for current models, simpler / cheaper / more reliable (?) than RAG.
+After playing with the text extraction for a while with mixed results, a thought came to me - maybe I can just *show* a vision model pictures of the document? 
+
+That would give it the text information along with all the important visual clues as to how it relates and what it means. I could ask it to extract, label and summarise the information for me. Surely that was too much for a tiny local model?
+
+I converted a contract to a series of PNGs, prepared them as ImageContent for a chat message and sent them to Gemma 3 and was amazed when, after a few tweaks to its prompt, the document chunks it returned performed better with the agentic search than any of my raw text based runs.
+
+# Search Orchestration
+- Extractor / Author / Critic
+
+# Single Model, One Shot.
+- GPT-5-Mini hosted in AI Foundry
+
+# Responses API
+- OpenAPI Responses API allows direct PDF bytes upload - text extraction and image recognition all done server-side
+- All in context - a few pages (270KB) of PDF not too much for current models, simpler / cheaper / more reliable (?) than RAG.
 
 # Validation
-    - Required to go beyond prototype
-    - Console output limited
-    - Dedicated application to enable
-        - Ingestion
-        - Labelling
-        - Extraction
-        - Validation
-    - Immediate value vs manual
-    - Building automated eval capability
+- Required to go beyond prototype
+- Console output limited
+- Dedicated application to enable
+    - Ingestion
+    - Labelling
+    - Extraction
+    - Validation
+- Immediate value vs manual
+- Building automated eval capability
