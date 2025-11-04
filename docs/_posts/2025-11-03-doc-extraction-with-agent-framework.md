@@ -99,6 +99,8 @@ One answer to this is rather than search for the chunks ourselves, just give the
 
 I also sped up the process of embedding the documents by implementing an [`IEmbeddingGenerator`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.ai.iembeddinggenerator-2?view=net-9.0-pp) tailored to the LM Studio embedding API. By passing this to the Qdrant connector the embeddings would be automatically requested and populated when inserting an item.
 
+At the time I found Qwen 3 was the most consistently successful at using the tool.
+
 
 # Vision!
 
@@ -106,7 +108,7 @@ After playing with the text extraction for a while with mixed results, a thought
 
 That would give it the text information along with all the important visual clues as to how it relates and what it means. I could ask it to extract, label and summarise the information for me. Surely that was too much for a tiny local model?
 
-I converted a contract to a series of PNGs, prepared them as ImageContent for a chat message and sent them to Gemma 3 and was amazed when, after a few tweaks to its prompt, the document chunks it returned performed better with the agentic search than any of my raw text based runs.
+I converted a contract to a series of PNGs, prepared them as ImageContent for a chat message and sent them to Gemma 3 and was amazed when, after a few tweaks to its prompt, the document chunks it returned performed better with the agentic search by Qwen 3 than any of my raw text based runs.
 
 # Search Orchestration
 - Extractor / Author / Critic
