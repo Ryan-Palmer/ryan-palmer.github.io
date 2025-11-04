@@ -47,7 +47,7 @@ It was also great at reasoning and ok with tool use, however I also had strong r
 > Since then many other models have been released, such as OpenAI's GPT OSS 120B which is much more resource intensive but can still be run on a high-end home PC.
 
 
-# Microsoft Agent Framework
+# Microsoft Agent Framework (and Semantic Kernel)
 
 Although a .NET and web developer by trade, I often turn to Python when working with ML / AI projects. For this project however, I decided see what Microsoft had available. This would facilitate integration with our existing F# / Azure stack.
 
@@ -60,6 +60,8 @@ This has been around for a while and had recently spawned it's [Agent Framework]
 As I progressed through the project, the new [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/agent-framework-overview) was announced.
 
 Whilst this did initially bring to mind the famous XKCD on [Standards](https://xkcd.com/927/), it actually allows the SK team to merge with the [AutoGen](https://microsoft.github.io/autogen/stable//index.html) folk to work on a unified, modern platform.
+
+I've since ported all my code across and the new API is generally much nicer, although still in preview. The devs are really active and helpful with [issues on Github](https://github.com/microsoft/agent-framework/issues).
 
 There is an awesome [series of videos](https://www.youtube.com/playlist?list=PLhGl0l5La4sYXjYOBv7h9l7x6qNuW34Cx) on YouTube which show practical examples of migration process from SK and how to use all the features of the new framework. I'd highly recommed it as your first point of call for any more information on the approaches discussed in this blog.
 
