@@ -113,10 +113,29 @@ I converted a contract to a series of PNGs, prepared them as ImageContent for a 
 
 Inspection of the chunks in the vector store showed that they were mostly well extracted, labeled and described.
 
+To further speed up the chunk extraction process I exposed the Qdrant `upsert` code as a tool for the vllm. Combined with the `IEmbeddingGenerator`, this allowed the agent to extract, embed and save the chunks autonomously.
+
 
 # Search Orchestration
 - Extractor / Author / Critic
 
+In the previous example I had two agents, the document-chunk-extracting vision agent and the contract-extracting reasoning agent with chunk search capabilities.
+
+They were run [sequentially](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/sequential?pivots=programming-language-csharp), which is one pattern of [agent orchestration](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/?pivots=programming-language-csharp).
+
+> The links here are to the Semantic Kernel docs I used, but the functionality is [being added to Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/user-guide/workflows/orchestrations/overview) too
+
+It was here that I hit a fairly common issue. In normal circumstances you can't combine tool use and structured output when calling an agent. This is simply because forcing a json schema on the output prevents the agent calling tools.
+
+There are various slightly hacky workarounds, such as having a 'thinking output' field on your structured model. Another which I tried here is giving the agent a 'validation' tool with your model as structured input which just returns it unchanged, asking the agent to call it before returning the output.
+
+This worked sometimes, but I would often need to ask the model to try searching again. This was a perfect opportunity to experiment with another common orchestration pattern, [Group Chat](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/group-chat?pivots=programming-language-csharp).
+
+More concretely, I would create an agent to act in my place as a 'critic' to the contract 'author'. These can be different LLMs from different providers - it's all abstracted away by the framework.
+
+The critic was instructed to either provide constructive feedback as to what was missing or utter the magic phrase `I approve`. I then had to implement an `AuthorCriticManager` sublass of [RoundRobinGroupChatManager](https://learn.microsoft.com/en-us/dotnet/api/microsoft.agents.ai.workflows.agentworkflowbuilder.roundrobingroupchatmanager?view=agent-framework-dotnet-latest) where `FilterResults` filters for messages by the author and `ShouldTerminate` looks for the magic exit phrase.
+
+This worked pretty well, and on average improved the results. It was funny to watch the models go back and forth in their conversation, although perhaps due to their tiny local nature they often ended up in extended dialogue which wasn't going anwhere. In these cases I was glad I wasn't paying for the tokens. The `RoundRobinGroupChatManager` does have a `MaximumInvocationCount` parameter to prevent complete runaway.
 
 # Single Model, One Shot.
 - GPT-5-Mini hosted in AI Foundry
