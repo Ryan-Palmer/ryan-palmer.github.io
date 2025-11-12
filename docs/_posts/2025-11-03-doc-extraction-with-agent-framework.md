@@ -1,16 +1,22 @@
 ---
 layout: post
-title:  "Document Extraction with Microsoft Agent Framework"
+title:  "Contract extraction from PDFs with vision LLMs and Microsoft Agent Framework"
 date:   2025-11-03 13:51:46 +0000
 ---
 
+# TL;DR
+- Microsoft Agent Framework allows you to create and orchestrate agents using local or remote LLMs
+- Extracting, storing and searching document info is supported by the SDKs but a challenging problem to tackle
+- The OpenAI Responses API in Azure AIFoundry provides enterprise grade access to frontier models
+
+
 # The task
 
-I was recently presented with a great task at [Wieldmore](https://www.wieldmore.com/). It felt like the perfect combination of challenging but tractable.
+At [Wieldmore](https://www.wieldmore.com/) I was presented with a challenging but tractable task.
 
-The question, at least on the surface, was simple - can we use AI to speed up the time consuming, manual process of looking through financial contract PDFs and picking out the values and terms for booking into our analytics platform, [Pomelo](https://www.wieldmore.com/pomelo)?
+The question, at least on the surface, was simple - can we use AI to speed up the time consuming, manual process of looking through heterogeneous financial contract PDFs to pick out the values and terms for booking into our analytics platform, [Pomelo](https://www.wieldmore.com/pomelo)?
 
-This kind of task is a great use case for LLMs / v(ision)LLMs as it leans into their strengths - understanding the context of a document. It is also something for which it would be extremely difficult if not impossible to program a manual routine - the variation in layout and content of the documents is just too vast to parse deterministically.
+This kind of problem is a great use case for LLMs / v(ision) LLMs as it leans into their strengths - understanding the context of a document. It is also something for which it would be extremely difficult if not impossible to program a manual routine - the variation in layout and content of the documents is just too vast to parse deterministically.
 
 
 # Getting started
@@ -61,7 +67,7 @@ As I progressed through the project, the new [Microsoft Agent Framework](https:/
 
 Whilst this did initially bring to mind the famous XKCD on [Standards](https://xkcd.com/927/), it has allowed the teams to merge in order to work on a unified, modern platform.
 
-I've since ported all my Semantic Kernal code across to Microsoft Agent Framework and the new API is generally much nicer, although still in preview. The devs are really active and helpful with [issues on Github](https://github.com/microsoft/agent-framework/issues).
+I've since ported all my Semantic Kernel code across to Microsoft Agent Framework and the new API is generally much nicer, although still in preview. The devs are really active and helpful with [issues on Github](https://github.com/microsoft/agent-framework/issues).
 
 There is an awesome [series of videos](https://www.youtube.com/playlist?list=PLhGl0l5La4sYXjYOBv7h9l7x6qNuW34Cx) on YouTube which show practical examples of migration process from SK and how to use all the features of the new framework. I'd highly recommend it as your first point of call for any more information on the approaches discussed in this blog.
 
