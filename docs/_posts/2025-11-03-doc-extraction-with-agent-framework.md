@@ -5,12 +5,12 @@ date:   2025-11-03 13:51:46 +0000
 ---
 
 # TL;DR
-- Microsoft Agent Framework allows you to create and orchestrate agents using local or remote LLMs
-- Extracting, storing and searching document info is supported by the SDKs but a challenging problem to tackle
-- The OpenAI Responses API in Azure AIFoundry provides enterprise grade access to frontier models
+- Creating and orchestrating agent workflows using local or remote LLMs in .NET is easy with Microsoft Agent Framework
+- Extracting, storing and searching document info is a challenging problem to tackle
+- The OpenAI Responses API in Azure AI Foundry provides enterprise grade access to frontier models
 
 
-# The task
+# Introduction
 
 At [Wieldmore](https://www.wieldmore.com/) I was presented with a challenging but tractable task.
 
@@ -42,7 +42,7 @@ We have a choice of running them locally or remotely.
 
 I am lucky enough to have a pretty capable PC which can run many of the open source models available on platforms such as [Hugging Face](https://huggingface.co/) and I figured "If I can get it working on a small, local model then a large, remote model should have no problem". It also has the advantage of being free, other than the power.
 
-I did briefly experiment with [Ollama](https://ollama.com/) along with [OpenWebUI](https://openwebui.com/) for local model hosting and configuration, but I really preferred the experience of using [LM Studio](https://lmstudio.ai/) so settled on this as my platform. It has a really intuitive interface which makes discovering, installing and experimenting with models a breeze.
+I did briefly experiment with [Ollama](https://ollama.com/) along with [OpenWebUI](https://openwebui.com/) for local model hosting and configuration, but I ultimately preferred the experience of using [LM Studio](https://lmstudio.ai/) so settled on this as my platform. It has a simple setup process and an intuitive interface which makes discovering, installing and experimenting with models a breeze.
 
 For the upcoming experiments I needed models which supported vision, reasoning and tool use.
 
@@ -132,11 +132,11 @@ Combined with the `IEmbeddingGenerator`, this allowed the agent to extract, embe
 
 In the previous example I had two agents, the document-chunk-extracting vision agent and the contract-extracting reasoning agent with chunk search capabilities. They were run [sequentially](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/sequential?pivots=programming-language-csharp), which is one pattern of [agent orchestration](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/?pivots=programming-language-csharp).
 
-> The links here are to the Semantic Kernel docs I used, but the functionality is [being added to Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/user-guide/workflows/orchestrations/overview) too
+> The links here are to the Semantic Kernel docs I used, but the functionality is [being added to Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/user-guide/workflows/orchestrations/overview) too.
 
 It was here that I hit a fairly common issue. In normal circumstances you can't combine tool use and structured output when calling an agent. This is simply because forcing a JSON schema on the output prevents the agent calling tools. There are various slightly hacky workarounds, such as having a 'thinking output' field on your structured model. Another, which I tried here, is giving the agent a 'validation' tool with your model as structured input which just returns it unchanged. You can then ask the agent to call it before returning the output.
 
-This worked sometimes, but I would often need to ask the model to try searching again. This was a perfect opportunity to experiment with another common orchestration pattern, [Group Chat](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/group-chat?pivots=programming-language-csharp). More concretely, I would create an agent to act in my place as a 'critic' to the contract 'author'. These can be different LLMs from different providers - it's all abstracted away by the framework.
+This worked sometimes, but I would often need to ask the model to try searching for more info before trying again. This was a perfect opportunity to experiment with another common orchestration pattern, [Group Chat](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/group-chat?pivots=programming-language-csharp). More concretely, I would create an agent to act in my place as a 'critic' to the contract 'author'. These can be different LLMs from different providers - it's all abstracted away by the framework.
 
 The critic was instructed to either provide constructive feedback as to what was missing or utter the magic phrase `I approve`. The group chat orchestration requires a [GroupChatManager](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/group-chat?pivots=programming-language-csharp#customize-the-group-chat-manager). I re-implemented the sealed [AuthorCriticManager](https://github.com/markwallace-microsoft/semantic-kernel/blob/1ccdd1e649dd69bea6f797a3ad74e65f5228e7c0/dotnet/samples/GettingStartedWithAgents/Orchestration/Step03_GroupChat.cs#L92) class, which is itself a subclass of [RoundRobinGroupChatManager](https://learn.microsoft.com/en-us/dotnet/api/microsoft.agents.ai.workflows.agentworkflowbuilder.roundrobingroupchatmanager?view=agent-framework-dotnet-latest) with two simple overloads:
 - `FilterResults` filters for messages by the author
@@ -149,10 +149,6 @@ This worked pretty well, and on average improved the results. It was funny to wa
 
 At this point I had explored the SDKs, APIs, orchestrations, tools and discovered approaches that worked most of the time with small local models. It seemed an appropriate time to explore larger, commercial models to see what they could achieve and also what challenges might be involved.
 
-The first considerations were 
-- Where can I find them?
-- How much will it cost?
-
 I had noticed the recently released [Github Models](https://docs.github.com/en/github-models) service which allows you to experiment with a large selection of models for free with restrictions or derestricted with billing linked to your Github account. This seemed like a low barrier to entry, plus the [AI Toolkit](https://learn.microsoft.com/en-us/windows/ai/toolkit/) plugin in VSCode made it easy to explore the catalogue.
 
 I decided to start with the simplest thing that could possibly work, on the smallest model available (within reason, given cost vs performance etc etc). Could [GPT-5 mini](https://github.com/marketplace/models/azure-openai/gpt-5-mini) use its vision capabilities to extract the entire contract in one shot from the images alone, negating the need for any extraction / chunking / RAG / tools / orchestration etc?
@@ -162,7 +158,7 @@ I had to turn on billing as the multiple pages images exceeded the free limits o
 
 # Responses API
 
-Whilst looking at the OpenAPI documentation, I found a section explaining that you can [upload PDFs directly](https://platform.openai.com/docs/guides/pdf-files?api-mode=chat)! Open API [extract both images *and* text](https://platform.openai.com/docs/guides/pdf-files?api-mode=chat#how-it-works) from the document and feed it to the model for you. This would simplify my code and provide even more context to the model, a double win. 
+Whilst looking at the OpenAPI documentation, I found a section explaining that you can [upload PDFs directly](https://platform.openai.com/docs/guides/pdf-files?api-mode=chat)! Open API [extracts both images *and* text](https://platform.openai.com/docs/guides/pdf-files?api-mode=chat#how-it-works) from the document and feeds it to the model for you. This would simplify my code and provide even more context to the model, a double win. 
 
 There was only one problem - PDF upload requires use of the [Responses API](https://platform.openai.com/docs/api-reference/responses). This is OpenAI's most up to date API, replacing the (still widely used) ChatCompletions and Assistants APIs which came before it. Unfortunately, Github Models [only supports the Chat Completions](https://docs.github.com/en/rest/models/inference?apiVersion=2022-11-28#run-an-inference-request) API. In addition to this, I had been authenticating with a Personal Access Token which was fine for testing but not an ideal solution as we move towards production.
 
@@ -176,3 +172,8 @@ It's never been easier to get up and running with your own agent-based software.
 
 In these situations, as in most other software development challenges, I find the best approach is to balance exploration and exploitation to understand the landscape and make meaningful progress towards your goals. Focus on the activities which will [resolve the most amount of uncertainty for the least amount of risk](https://www.youtube.com/watch?v=bk_xCikDUDQ), then take the simplest path possible given what you've learnt.
 
+Of course, a working demo is only the start of the journey. Following on, you need to consider e.g.
+- How will I expose the functionality to users?
+- How will I monitor output quality?
+
+I would recommend checking out the [AI Engineer](https://www.youtube.com/@aiDotEngineer) channel on Youtube, particularly the videos which cover [evals](https://www.youtube.com/@aiDotEngineer/search?query=evals), once you are ready to move beyond the proof of concept stage.
