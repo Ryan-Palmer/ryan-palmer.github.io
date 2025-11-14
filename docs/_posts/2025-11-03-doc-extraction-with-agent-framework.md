@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Contract extraction from PDFs with vision LLMs and Microsoft Agent Framework"
+title:  "PDF Extraction with Microsoft Agent Framework and F#"
 date:   2025-11-03 13:51:46 +0000
 ---
 
@@ -44,13 +44,15 @@ I am lucky enough to have a pretty capable PC which can run many of the open sou
 
 I did briefly experiment with [Ollama](https://ollama.com/) along with [OpenWebUI](https://openwebui.com/) for local model hosting and configuration, but I ultimately preferred the experience of using [LM Studio](https://lmstudio.ai/) so settled on this as my platform. It has a simple setup process and an intuitive interface which makes discovering, installing and experimenting with models a breeze.
 
+![LM Studio](/assets/lms.png)
+
 For the upcoming experiments I needed models which supported vision, reasoning and tool use.
 
 I did a quick run of experiments against the top models available in LM Studio and it became pretty obvious that the best vision model my machine could support was [Gemma 3 27B](https://lmstudio.ai/models/google/gemma-3-27b).
 
 Gemma 3 was also great at reasoning and ok with tool use, however I also had strong results for these use cases with [Qwen3 32B](https://lmstudio.ai/models/qwen/qwen3-32b).
 
-> Since then many other models have been released, such as OpenAI's GPT OSS 120B which is much more resource intensive but can still be run on a high-end home PC.
+> Since then many other models have been released, such as OpenAI's [GPT OSS 120B](https://lmstudio.ai/models/openai/gpt-oss-120b) which is much more resource intensive but can still be run on a high-end home PC.
 
 
 # Microsoft Agent Framework (and Semantic Kernel)
@@ -80,6 +82,25 @@ My first instinct was to try to extract the text from the document.
 
 I found a richly featured library called [PDFPig](https://github.com/UglyToad/PdfPig) which supported text extraction from PDFs in .NET. It uses a number of algorithms to determine the arrangement of the text and chunks it along with x/y coordinates determining its position on the page.
 
+I wrapped its output in some descriptive tags to hint the structure to the model.
+
+```fsharp
+let pageBlocksFromPdf filePath =
+    use document = PdfDocument.Open filePath
+    document.GetPages()
+    |> Seq.map (fun page -> 
+        page.Letters 
+        |> NearestNeighbourWordExtractor.Instance.GetWords 
+        |> DocstrumBoundingBoxes.Instance.GetBlocks 
+        |> UnsupervisedReadingOrderDetector.Instance.Get
+        |> Seq.map (fun block -> $"<BLOCK x=%0.3f{block.BoundingBox.TopLeft.X} y=%0.3f{block.BoundingBox.TopLeft.Y} w=%0.3f{block.BoundingBox.Width} h=%0.3f{block.BoundingBox.Height}>\n{block.Text}\n</BLOCK>")
+        |> String.concat "\n")
+    |> String.concat "\n<PAGE>\n"
+    |> fun allText -> 
+        $"<PAGE>\n{allText}\n"
+```
+
+
 As effective as the library was, I found that the sheer volume of data quickly exceeded the context length of the LM Studio models on my machine.
 
 
@@ -91,12 +112,56 @@ The excessive size of the complete document content overflowing the context led 
 
 Semantic Kernel provided a 'connector' for a vector database called [Qdrant](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/qdrant-connector?pivots=programming-language-csharp) which simplifies connecting to and interacting with an instance.
 
-> You can launch Qdrant easily [using Docker](https://qdrant.tech/documentation/quickstart/)
+> You can launch Qdrant easily [using Docker Compose](https://qdrant.tech/documentation/quickstart/):
+
+```docker
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    restart: unless-stopped
+
+volumes:
+  qdrant_storage:
+    driver: local
+```
 
 I manually serialised the extracted document chunks and posted them to the LM Studio [embedding endpoint](https://lmstudio.ai/docs/python/embedding) to get their vectors. A DTO model was [defined with attributes](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/qdrant-connector?pivots=programming-language-csharp#property-name-override) from `Microsoft.Extensions.VectorData` identifying the primary key, data and the embedding fields which allows data to be inserted into the Qdrant store and subsequently queried and rehydrated.
 
-With all this set up I could embed a query, such as "What is the notional amount of the swap?", then search Qdrant for document chunks which are related to that query. This dramatically reduces the amount of data you need to send to the contract extraction LLM, as in theory you have filtered for relevant information. It could also, again theoretically, improve the quality of results as you have kept the LLM's attention on the important stuff.
+```fsharp
+type DocumentBlock() =
+    [<VectorStoreKey>]
+    member val Id: Guid = Guid.Empty with get, set
+    [<VectorStoreData(IsIndexed = true)>]
+    member val DocumentId: string = "" with get, set
+    [<VectorStoreData(IsIndexed = true)>]
+    member val Page: int = 0 with get, set
+    [<VectorStoreData(IsIndexed = false)>]
+    member val Text: string = "" with get, set
+    [<VectorStoreVector(Dimensions = 768, DistanceFunction = DistanceFunction.CosineSimilarity, IndexKind = IndexKind.Hnsw)>]
+    member val TextEmbedding: ReadOnlyMemory<float32> = ReadOnlyMemory.Empty with get, set
 
+// ....
+
+pdfPath
+|> embeddedBlocksFromPdf
+|> collection.UpsertAsync
+```
+
+With all this set up I could embed a query and then search Qdrant for document chunks which are related to it. This dramatically reduces the amount of data you need to send to the contract extraction LLM, as in theory you have filtered for relevant information. It could also, again theoretically, improve the quality of results as you have kept the LLM's attention on the important stuff.
+
+```fsharp
+let embeddedQuery = embedQuery "What is the notional amount of the swap?"
+
+collection.SearchAsync(embeddedQuery, 5)
+|> AsyncSeq.ofAsyncEnum
+|> AsyncSeq.iter (fun result -> printfn $"{result.Score} : {result.Record.Text}")
+```
 
 # Agentic Search
 
@@ -105,6 +170,40 @@ Initial tests showed some success, but naturally led to the question of how many
 One answer to this is rather than search for the chunks ourselves, just give the LLM a tool which allows it to search the store for itself and instruct it to keep searching until it finds what it needs. Semantic Kernel makes this easy by passing the Qdrant store to an instance of their [VectorStoreTextSearch plugin](https://learn.microsoft.com/en-us/semantic-kernel/concepts/text-search/text-search-vector-stores?pivots=programming-language-csharp#using-a-vector-store-with-text-search) which can then be registered as a tool for the LLM.
 
 I also sped up the process of embedding the documents by implementing an [`IEmbeddingGenerator`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.ai.iembeddinggenerator-2?view=net-9.0-pp) tailored to the LM Studio embedding API. By passing this to the Qdrant connector the embeddings would be automatically requested and populated when inserting an item, removing the need for me to manually request them from LM Studio.
+
+```fsharp
+type ExtractedDocument() =
+    [<VectorStoreKey>]
+    [<TextSearchResultName>]
+    member val Id: Guid = Guid.Empty with get, set
+    [<VectorStoreData(IsIndexed = false)>]
+    [<TextSearchResultValue>]
+    member val Extract: string = "" with get, set
+    [<VectorStoreVector(768)>]
+    member this.ExtractEmbedding: string = this.Extract
+
+//...
+
+let vectorStoreEmbeddings =
+    pageChunks
+    |> Array.map (fun (pageNumber, docChunk) ->
+        ExtractedDocument(
+            Id = Guid.NewGuid(),
+            Extract = JsonSerializer.Serialize docChunk))
+
+let vectorStore = 
+    QdrantVectorStore(
+        new QdrantClient("localhost"),
+        ownsClient = true,
+        options = QdrantVectorStoreOptions(EmbeddingGenerator=lmsEmbeddingGenerator))
+
+let collection = vectorStore.GetCollection<Guid, ExtractedDocument>("extracted-documents")
+
+collection.EnsureCollectionExistsAsync()
+
+vectorStoreEmbeddings
+|> collection.UpsertAsync
+```
 
 At the time I found Qwen 3 was the most consistently successful at using the tool.
 
@@ -125,6 +224,25 @@ To further speed up the chunk extraction process I added two new features:
 
 > In Semantic Kernel this was achieved by decorating a method with the [KernelFunction](https://learn.microsoft.com/en-us/semantic-kernel/concepts/ai-services/chat-completion/function-calling/?pivots=programming-language-csharp#example-ordering-a-pizza) attribute. In Microsoft Agent Framework you [wrap a static method in `AIFunctionFactory.Create()`](https://learn.microsoft.com/en-us/agent-framework/tutorials/agents/function-tools?pivots=programming-language-csharp#create-the-agent-with-function-tools).
 
+```fsharp
+type StoragePlugin(qdrantCollection:QdrantCollection<Guid, ExtractedDocument>) =
+
+    [<KernelFunction; Description("Store document chunks in the Qdrant vector database.")>]
+    member this.StoreDocChunks (docChunks : DocChunks) = 
+        task {
+            do! qdrantCollection.EnsureCollectionExistsAsync()
+            let vectorStoreEmbeddings =
+                docChunks.Chunks
+                |> Array.map (fun (docChunk) ->
+                    ExtractedDocument(
+                        Id = Guid.NewGuid(),
+                        Extract = JsonSerializer.Serialize(docChunk)))
+            return!
+                vectorStoreEmbeddings
+                |> qdrantCollection.UpsertAsync
+        }
+```
+
 Combined with the `IEmbeddingGenerator`, this allowed the agent to extract, embed and save the chunks autonomously.
 
 
@@ -136,11 +254,50 @@ In the previous example I had two agents, the document-chunk-extracting vision a
 
 It was here that I hit a fairly common issue. In normal circumstances you can't combine tool use and structured output when calling an agent. This is simply because forcing a JSON schema on the output prevents the agent calling tools. There are various slightly hacky workarounds, such as having a 'thinking output' field on your structured model. Another, which I tried here, is giving the agent a 'validation' tool with your model as structured input which just returns it unchanged. You can then ask the agent to call it before returning the output.
 
-This worked sometimes, but I would often need to ask the model to try searching for more info before trying again. This was a perfect opportunity to experiment with another common orchestration pattern, [Group Chat](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/group-chat?pivots=programming-language-csharp). More concretely, I would create an agent to act in my place as a 'critic' to the contract 'author'. These can be different LLMs from different providers - it's all abstracted away by the framework.
+This worked sometimes, but I would often need to ask the model to try searching for more info before trying again. This was a perfect opportunity to experiment with another common orchestration pattern, [Group Chat](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/group-chat?pivots=programming-language-csharp).
+
+![Group Chat](/assets/group-chat.png)
+
+More concretely, I would create an agent to act in my place as a 'critic' to the contract 'author'. These can be different LLMs from different providers - it's all abstracted away by the framework.
 
 The critic was instructed to either provide constructive feedback as to what was missing or utter the magic phrase `I approve`. The group chat orchestration requires a [GroupChatManager](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/group-chat?pivots=programming-language-csharp#customize-the-group-chat-manager). I re-implemented the sealed [AuthorCriticManager](https://github.com/markwallace-microsoft/semantic-kernel/blob/1ccdd1e649dd69bea6f797a3ad74e65f5228e7c0/dotnet/samples/GettingStartedWithAgents/Orchestration/Step03_GroupChat.cs#L92) class, which is itself a subclass of [RoundRobinGroupChatManager](https://learn.microsoft.com/en-us/dotnet/api/microsoft.agents.ai.workflows.agentworkflowbuilder.roundrobingroupchatmanager?view=agent-framework-dotnet-latest) with two simple overloads:
 - `FilterResults` filters for messages by the author
 - `ShouldTerminate` looks for the magic `I approve` exit phrase (or reaching the `MaximumInvocationCount` specified on the `GroupChatManager`).
+
+```fsharp
+type AuthorCriticManager(authorName: string, criticName: string) =
+    inherit RoundRobinGroupChatManager()
+    
+    override this.FilterResults(history: ChatHistory, cancellationToken: CancellationToken) =
+        let finalResult = 
+            history 
+            |> Seq.filter (fun message -> message.AuthorName = authorName)
+            |> Seq.last
+        
+        let result = GroupChatManagerResult<string>(finalResult.ToString(), Reason = "The approved copy.")
+        ValueTask.FromResult(result)
+    
+    override this.ShouldTerminate(history: ChatHistory, cancellationToken: CancellationToken) =
+        let baseResult = base.ShouldTerminate(history, cancellationToken)
+        task {
+            // Has the maximum invocation count been reached?
+            let! baseResult = baseResult.AsTask()
+            
+            if not baseResult.Value then
+                // If not, check if the reviewer has approved the copy.
+                let lastMessage = history |> Seq.tryLast
+                match lastMessage with
+                | Some msg when 
+                    msg.AuthorName = criticName && 
+                    msg.ToString().Contains("I Approve", StringComparison.OrdinalIgnoreCase) ->
+                    // If the reviewer approves, we terminate the chat.
+                    return GroupChatManagerResult<bool>(true, Reason = "The reviewer has approved the copy.")
+                | _ ->
+                    return baseResult
+            else
+                return baseResult
+        } |> ValueTask<GroupChatManagerResult<bool>>
+```
 
 This worked pretty well, and on average improved the results. It was funny to watch the models go back and forth in their conversation, although perhaps due to their tiny local nature they often ended up in extended dialogue which wasn't going anywhere. In these cases I was glad I wasn't paying for the tokens (although of course I could have limited the `MaximumInvocationCount` as stated above).
 
@@ -149,7 +306,9 @@ This worked pretty well, and on average improved the results. It was funny to wa
 
 At this point I had explored the SDKs, APIs, orchestrations, tools and discovered approaches that worked most of the time with small local models. It seemed an appropriate time to explore larger, commercial models to see what they could achieve and also what challenges might be involved.
 
-I had noticed the recently released [Github Models](https://docs.github.com/en/github-models) service which allows you to experiment with a large selection of models for free with restrictions or derestricted with billing linked to your Github account. This seemed like a low barrier to entry, plus the [AI Toolkit](https://learn.microsoft.com/en-us/windows/ai/toolkit/) plugin in VSCode made it easy to explore the catalogue.
+I had noticed the recently released [Github Models](https://docs.github.com/en/github-models) service which allows you to experiment with a large selection of models for free with restrictions or derestricted with billing linked to your Github account. This seemed like a low barrier to entry, plus the [AI Toolkit](https://learn.microsoft.com/en-us/windows/ai/toolkit/) plugin in VSCode made it easy to explore the catalogue:
+
+![Github Models](/assets/gh-models.png)
 
 I decided to start with the simplest thing that could possibly work, on the smallest model available (within reason, given cost vs performance etc etc). Could [GPT-5 mini](https://github.com/marketplace/models/azure-openai/gpt-5-mini) use its vision capabilities to extract the entire contract in one shot from the images alone, negating the need for any extraction / chunking / RAG / tools / orchestration etc?
 
@@ -164,7 +323,25 @@ There was only one problem - PDF upload requires use of the [Responses API](http
 
 For both of these reasons, I decided to look at Microsoft's [AI Foundry](https://learn.microsoft.com/en-us/azure/ai-foundry/what-is-azure-ai-foundry) enterprise offering. This both [supports the Responses API](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses?tabs=python-key) and allows authenticating with [Azure credentials](https://learn.microsoft.com/en-us/azure/ai-foundry/quickstarts/get-started-code?tabs=csharp#set-up-your-environment) via e.g. the CLI or, eventually, managed identity in App Service. It's also tied into the billing for the rest of our Azure services and has full featured [VSCode integration](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/get-started-projects-vs-code), so acted as a great replacement for Github Models. 
 
+![AI Foundry](/assets/ai-foundry.png)
+
 Once I provisioned the GPT 5 mini model in AI Foundry and switched my connection details, I was able to create an [OpenAIResponseClient](https://learn.microsoft.com/en-us/dotnet/api/azure.ai.openai.azureopenaiclient.getopenairesponseclient?view=azure-dotnet-preview) and directly submit a PDF as a byte array inside a [DataContent](https://learn.microsoft.com/en-us/agent-framework/user-guide/agents/running-agents?pivots=programming-language-csharp#message-types) message. I once again found very strong performance, with the simple architecture resulting in a low token count and very reasonable cost of a fraction of a penny per document.
+
+```fsharp
+let pdfToChatMessage (pdfBytes : byte[]) =
+    let content = ResizeArray<AIContent>()
+    DataContent(pdfBytes, "application/pdf") |> content.Add
+    ChatMessage(ChatRole.User, content)
+
+let tryExtractDocument (options : AgentFrameworkOptions) (docData : DocumentData) = async {
+    let azureOpenAIClient = new AzureOpenAIClient(Uri options.ServerUrl, AzureCliCredential())
+    let responseClient = azureOpenAIClient.GetOpenAIResponseClient options.Model
+    let pdfMessage = pdfToChatMessage docData.Data
+    let agent = contractExtractionAgent responseClient
+    let! response = agent.RunAsync pdfMessage |> Async.AwaitTask
+    return response.Deserialize<Contract> JsonSerializerOptions.Web
+}
+```
 
 # Conclusion
 
