@@ -71,7 +71,7 @@ Whilst this did initially bring to mind the famous XKCD on [Standards](https://x
 
 I've since ported all my Semantic Kernel code across to Microsoft Agent Framework and the new API is generally much nicer, although still in preview. The devs are really active and helpful with [issues on Github](https://github.com/microsoft/agent-framework/issues).
 
-There is an awesome [series of videos](https://www.youtube.com/playlist?list=PLhGl0l5La4sYXjYOBv7h9l7x6qNuW34Cx) on YouTube which show practical examples of the migration process from SK and how to use all the features of the new framework. I'd highly recommend it as your first point of call for any more information on the approaches discussed in this blog.
+There is an awesome [series of videos](https://www.youtube.com/playlist?list=PLhGl0l5La4sYXjYOBv7h9l7x6qNuW34Cx) on YouTube which show practical examples of the migration process from SK and how to use all the features of the new framework. I'd highly recommend it as your first point of call for more information on the approaches discussed in this blog.
 
 
 # How to get data out of PDFs?
