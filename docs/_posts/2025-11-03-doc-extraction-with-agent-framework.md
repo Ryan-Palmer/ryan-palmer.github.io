@@ -6,7 +6,7 @@ date:   2025-11-03 13:51:46 +0000
 
 # TL;DR
 - Creating and orchestrating agent workflows using local or remote LLMs in .NET is easy with Microsoft Agent Framework
-- Extracting, storing and searching document info is a challenging problem to tackle
+- Extracting, storing and searching document info is a challenging problem to tackle (particularly PDFs!)
 - The OpenAI Responses API in Azure AI Foundry provides enterprise grade access to frontier models
 
 
@@ -16,7 +16,7 @@ At [Wieldmore](https://www.wieldmore.com/) I was presented with a challenging bu
 
 The question, at least on the surface, was simple - can we use AI to speed up the time consuming, manual process of looking through heterogeneous financial contract PDFs to pick out the values and terms for booking into our analytics platform, [Pomelo](https://www.wieldmore.com/pomelo)?
 
-This kind of problem is a great use case for LLMs / v(ision) LLMs as it leans into their strengths - understanding the context of a document. It is also something for which it would be extremely difficult if not impossible to program a robust manual routine - the variation in layout and content of the documents is just too vast.
+This kind of problem is a great use case for LLMs / v(ision) LLMs as it leans into their strengths - understanding the context of a document. It is also something for which it would be extremely difficult, if not impossible, to program a robust manual routine - the variation in layout and content of the documents is just too vast.
 
 
 # Getting started
@@ -218,7 +218,7 @@ After playing with the text extraction for a while with mixed results, a thought
 
 That would give it the text information along with all the important visual clues as to how the blocks relate. I could ask it to extract, label and summarise the information for me. Surely that was too much for a tiny local model?
 
-I converted a contract to a series of PNGs, prepared them as ImageContent for a chat message and sent them to Gemma 3. I was amazed when, after a few tweaks to the prompt, the document chunks it returned performed better with the agentic search than any of my raw text-based runs.
+I converted a contract to a series of PNGs, prepared them as `ImageContent` for a chat message and sent them to Gemma 3. I was amazed when, after a few tweaks to the prompt, the document chunks it returned performed better with the agentic search than any of my raw text-based runs.
 
 Inspection of the chunks in the vector store showed that they were mostly well extracted, labelled and described.
 
