@@ -351,7 +351,7 @@ let tryExtractDocument (options : AgentFrameworkOptions) (docData : DocumentData
 
 # Conclusion
 
-It's never been easier to get up and running with your own agent-based software. There are so many powerful small models and orchestration frameworks, convenient local tooling and cheap cloud hosting options that you can go from idea to prototype in no time. With that said, there are so many options and ways of tackling the problem that it can feel overwhelming. That's before you even consider how quickly the ecosystem is developing and changing underneath you.
+It's never been easier to get up and running with your own agent-based software. There are powerful small models and orchestration frameworks, convenient local tooling and cheap cloud hosting options that allow you to go from idea to prototype in no time. With that said, there are so many options and ways of tackling the problem that it can feel overwhelming. That's before you even consider how quickly the ecosystem is developing and changing underneath you.
 
 In these situations, as in most other software development challenges, I find the best approach is to try to balance exploration and exploitation, understanding the landscape and making meaningful progress towards your goals. Focus on the activities which will [resolve the most amount of uncertainty for the least amount of risk](https://www.youtube.com/watch?v=bk_xCikDUDQ), then take the simplest path possible given what you've learnt.
 
