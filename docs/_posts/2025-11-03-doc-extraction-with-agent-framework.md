@@ -80,7 +80,7 @@ PDF is a notoriously difficult format to work with. It is more of an image than 
 
 My first instinct was to try to extract the text from the document.
 
-I found a richly featured library called [PDFPig](https://github.com/UglyToad/PdfPig) which supports text extraction from PDFs in .NET. It uses a number of algorithms to determine the arrangement of the text and chunks it along with x/y coordinates determining its position on the page.
+I found a richly featured library called [PDFPig](https://github.com/UglyToad/PdfPig) which supports text extraction from PDFs in .NET. It uses a number of algorithms to determine the arrangement of the text and chunk it along with x/y coordinates determining its position on the page.
 
 I wrapped its output in some descriptive tags to hint the structure to the model.
 
