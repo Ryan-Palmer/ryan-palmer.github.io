@@ -16,12 +16,12 @@ At [Wieldmore](https://www.wieldmore.com/) I was presented with a challenging bu
 
 The question, at least on the surface, was simple - can we use AI to speed up the time consuming, manual process of looking through heterogeneous financial contract PDFs to pick out the values and terms for booking into our analytics platform, [Pomelo](https://www.wieldmore.com/pomelo)?
 
-This kind of problem is a great use case for LLMs / v(ision) LLMs as it leans into their strengths - understanding the context of a document. It is also something for which it would be extremely difficult if not impossible to program a manual routine - the variation in layout and content of the documents is just too vast to parse deterministically.
+This kind of problem is a great use case for LLMs / v(ision) LLMs as it leans into their strengths - understanding the context of a document. It is also something for which it would be extremely difficult if not impossible to program a robust manual routine - the variation in layout and content of the documents is just too vast.
 
 
 # Getting started
 
-Throughout 2025 the tools and capabilities of models and frameworks have been developed rapidly. It can feel a bit overwhelming and hard to know where to start.
+Throughout 2025 we've seen the tools and capabilities of models and frameworks develop rapidly. It can feel a bit overwhelming and hard to know where to start.
 
 I began by breaking the task into a series of questions:
 
@@ -31,16 +31,16 @@ I began by breaking the task into a series of questions:
 - How do I pass them data?
 - How do I know they are working correctly?
 
-Attempting to answer them has really helped me to understand the ecosystems and tooling available, which I found surprisingly accessible and intuitive once I got hands on.
+Answering them has led me to explore the ecosystems and tooling available, which were surprisingly accessible and intuitive once I got hands-on with them.
 
 
 # How to access LLMs?
 
 Perhaps the most obvious first question was "Where can I access LLMs for experimentation?".
 
-We have a choice of running them locally or remotely.
+We can choose to run them locally or remotely.
 
-I am lucky enough to have a pretty capable PC which can run many of the open source models available on platforms such as [Hugging Face](https://huggingface.co/) and I figured "If I can get it working on a small, local model then a large, remote model should have no problem". It also has the advantage of being free, other than the power.
+I am lucky enough to have a pretty capable PC which can run many of the open source models you can find on platforms such as [Hugging Face](https://huggingface.co/) and I figured "If I can get it working on a small, local model then a large, remote model should have no problem". It also has the advantage of being free, other than the power.
 
 I did briefly experiment with [Ollama](https://ollama.com/) along with [OpenWebUI](https://openwebui.com/) for local model hosting and configuration, but I ultimately preferred the experience of using [LM Studio](https://lmstudio.ai/) so settled on this as my platform. It has a simple setup process and an intuitive interface which makes discovering, installing and experimenting with models a breeze.
 
@@ -48,7 +48,7 @@ I did briefly experiment with [Ollama](https://ollama.com/) along with [OpenWebU
 
 For the upcoming experiments I needed models which supported vision, reasoning and tool use.
 
-I did a quick run of experiments against the top models available in LM Studio and it became pretty obvious that the best vision model my machine could support was [Gemma 3 27B](https://lmstudio.ai/models/google/gemma-3-27b).
+I did a quick run of experiments against the top vision models available in LM Studio and found the best results with [Gemma 3 27B](https://lmstudio.ai/models/google/gemma-3-27b).
 
 Gemma 3 was also great at reasoning and ok with tool use, however I also had strong results for these use cases with [Qwen3 32B](https://lmstudio.ai/models/qwen/qwen3-32b).
 
@@ -59,7 +59,7 @@ Gemma 3 was also great at reasoning and ok with tool use, however I also had str
 
 Although a .NET developer by trade, I often turn to Python when working with ML / AI projects. For this project however, I decided see what Microsoft had available. This would facilitate integration with our existing F# / Azure stack.
 
-As is often the case, they had a vast array of slightly confusingly overlapping and loosely defined products and services pitched at various levels of abstraction. To add to the fun, many of them were in preview and only partially documented.
+They had an array of overlapping products and services pitched at various levels of abstraction. Many of them were in preview and only partially documented.
 
 At the time I started the project, the framework which formed the core of the stack was [Semantic Kernel](https://learn.microsoft.com/en-us/semantic-kernel/overview/).
 
