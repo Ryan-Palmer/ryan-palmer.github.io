@@ -40,7 +40,7 @@ Perhaps the most obvious first question was "Where can I access LLMs for experim
 
 We can choose to run them locally or remotely.
 
-I am lucky enough to have a pretty capable PC which can run many of the open source models you can find on platforms such as [Hugging Face](https://huggingface.co/) and I figured "If I can get it working on a small, local model then a large, remote model should have no problem". It also has the advantage of being free, other than the power.
+I am lucky enough to have a pretty capable PC which can run many of the open source models you can find on platforms such as [Hugging Face](https://huggingface.co/) and I figured "If I can get it working on a small, local model then a large, remote model should have no problem and I won't be relying on brute force intelligence over a poor solution.". It also has the advantage of being free, other than the power.
 
 I did briefly experiment with [Ollama](https://ollama.com/) along with [OpenWebUI](https://openwebui.com/) for local model hosting and configuration, but I ultimately preferred the experience of using [LM Studio](https://lmstudio.ai/) so settled on this as my platform. It has a simple setup process and an intuitive interface which makes discovering, installing and experimenting with models a breeze.
 
@@ -110,7 +110,7 @@ The excessive size of the complete document content overflowing the context led 
 
 > An [embedding](https://www.datacamp.com/blog/vector-embedding) is essentially a numerical representation of the 'meaning' of an item of data, allowing you to understand how it relates to other items.
 
-Semantic Kernel provided a 'connector' for a vector database called [Qdrant](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/qdrant-connector?pivots=programming-language-csharp) which simplifies connecting to and interacting with an instance.
+Semantic Kernel provides a 'connector' for a vector database called [Qdrant](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/qdrant-connector?pivots=programming-language-csharp) which simplifies interacting with an instance.
 
 > You can launch Qdrant easily [using Docker Compose](https://qdrant.tech/documentation/quickstart/):
 
@@ -131,7 +131,9 @@ volumes:
     driver: local
 ```
 
-I manually serialised the extracted document chunks and posted them to the LM Studio [embedding endpoint](https://lmstudio.ai/docs/python/embedding) to get their vectors. A DTO model was [defined with attributes](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/qdrant-connector?pivots=programming-language-csharp#property-name-override) from `Microsoft.Extensions.VectorData` identifying the primary key, data and the embedding fields which allows data to be inserted into the Qdrant store and subsequently queried and rehydrated.
+I manually serialised the extracted document chunks and posted them to the LM Studio [embedding endpoint](https://lmstudio.ai/docs/python/embedding) to get their vectors. 
+
+A DTO model was [defined with attributes](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/qdrant-connector?pivots=programming-language-csharp#property-name-override) from `Microsoft.Extensions.VectorData` identifying the primary key, data and the embedding fields which allowed data to be inserted into the Qdrant store and subsequently queried and rehydrated.
 
 ```fsharp
 type DocumentBlock() =
@@ -153,7 +155,9 @@ pdfPath
 |> collection.UpsertAsync
 ```
 
-With all this set up I could embed a query and then search Qdrant for document chunks which are related to it. This dramatically reduces the amount of data you need to send to the contract extraction LLM, as in theory you have filtered for relevant information. It could also, again theoretically, improve the quality of results as you have kept the LLM's attention on the important stuff.
+With all this set up I could embed a query and then search Qdrant for document chunks which are related to it. 
+
+This approach dramatically reduces the amount of data needed by the contract extraction LLM, as in theory you have filtered for relevant information. It could also, again theoretically, improve the quality of results as you have kept the LLM's attention on the important stuff.
 
 ```fsharp
 let embeddedQuery = embedQuery "What is the notional amount of the swap?"
@@ -165,9 +169,9 @@ collection.SearchAsync(embeddedQuery, 5)
 
 # Agentic Search
 
-Initial tests showed some success, but naturally led to the question of how many results to ask the vector database for? Too few and you might not get the info you need, and too many will inflate the context length and add noisy information, defeating the point of implementing the search.
+Initial tests showed some success, but naturally led to the question "How many results should I ask the vector database for?". Too few and you might not get the info you need, and too many will inflate the context length and add noisy information, diluting what's important and arguably defeating the point of implementing the search.
 
-One answer to this is rather than search for the chunks ourselves, just give the LLM a tool which allows it to search the store for itself and instruct it to keep searching until it finds what it needs. Semantic Kernel makes this easy by passing the Qdrant store to an instance of their [VectorStoreTextSearch plugin](https://learn.microsoft.com/en-us/semantic-kernel/concepts/text-search/text-search-vector-stores?pivots=programming-language-csharp#using-a-vector-store-with-text-search) which can then be registered as a tool for the LLM.
+One answer to this is rather than search for the chunks ourselves, give the LLM a tool which allows it to search the store for itself and instruct it to keep searching until it finds what it needs. Semantic Kernel makes this easy by passing the Qdrant store to an instance of their [VectorStoreTextSearch plugin](https://learn.microsoft.com/en-us/semantic-kernel/concepts/text-search/text-search-vector-stores?pivots=programming-language-csharp#using-a-vector-store-with-text-search) which can then be registered as a tool for the LLM.
 
 I also sped up the process of embedding the documents by implementing an [`IEmbeddingGenerator`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.ai.iembeddinggenerator-2?view=net-9.0-pp) tailored to the LM Studio embedding API. By passing this to the Qdrant connector the embeddings would be automatically requested and populated when inserting an item, removing the need for me to manually request them from LM Studio.
 
@@ -214,7 +218,7 @@ After playing with the text extraction for a while with mixed results, a thought
 
 That would give it the text information along with all the important visual clues as to how the blocks relate. I could ask it to extract, label and summarise the information for me. Surely that was too much for a tiny local model?
 
-I converted a contract to a series of PNGs, prepared them as ImageContent for a chat message and sent them to Gemma 3. I was amazed when, after a few tweaks to the prompt, the document chunks it returned performed better with the agentic search than any of my raw text based runs.
+I converted a contract to a series of PNGs, prepared them as ImageContent for a chat message and sent them to Gemma 3. I was amazed when, after a few tweaks to the prompt, the document chunks it returned performed better with the agentic search than any of my raw text-based runs.
 
 Inspection of the chunks in the vector store showed that they were mostly well extracted, labelled and described.
 
@@ -252,7 +256,9 @@ In the previous example I had two agents, the document-chunk-extracting vision a
 
 > The links here are to the Semantic Kernel docs I used, but the functionality is [being added to Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/user-guide/workflows/orchestrations/overview) too.
 
-It was here that I hit a fairly common issue. In normal circumstances you can't combine tool use and structured output when calling an agent. This is simply because forcing a JSON schema on the output prevents the agent calling tools. There are various slightly hacky workarounds, such as having a 'thinking output' field on your structured model. Another, which I tried here, is giving the agent a 'validation' tool with your model as structured input which just returns it unchanged. You can then ask the agent to call it before returning the output.
+It was here that I hit a fairly common issue. In normal circumstances you can't combine tool use and structured output when calling an agent. This is simply because forcing a JSON schema on the output prevents the agent calling tools. 
+
+There are various slightly hacky workarounds, such as having a 'thinking output' field on your structured model. Another, which I tried here, is giving the agent a 'validation' tool with your model as structured input and which just returns it unchanged. You can then ask the agent to call it before returning the output.
 
 This worked sometimes, but I would often need to ask the model to try searching for more info before trying again. This was a perfect opportunity to experiment with another common orchestration pattern, [Group Chat](https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/group-chat?pivots=programming-language-csharp).
 
@@ -312,16 +318,16 @@ I had noticed the recently released [Github Models](https://docs.github.com/en/g
 
 I decided to start with the simplest thing that could possibly work, on the smallest model available (within reason, given cost vs performance etc etc). Could [GPT-5 mini](https://github.com/marketplace/models/azure-openai/gpt-5-mini) use its vision capabilities to extract the entire contract in one shot from the images alone, negating the need for any extraction / chunking / RAG / tools / orchestration etc?
 
-I had to turn on billing as the multiple pages images exceeded the free limits on context size, but to my delight the model was correct on every field. I tried it with a different contract type and again it was correct. This was of course great news as it meant we needed to use very few tokens compared to the more complex approaches, plus there was less to maintain and equally less to go wrong.
+I had to turn on billing as the multiple page images exceeded the free limits on context size, but to my delight the model was correct on every field. I tried it with a different contract type and again it was correct. This was of course great news as it meant we needed to use very few tokens compared to the more complex approaches, plus there was less to maintain and equally less to go wrong.
 
 
 # Responses API
 
 Whilst looking at the OpenAPI documentation, I found a section explaining that you can [upload PDFs directly](https://platform.openai.com/docs/guides/pdf-files?api-mode=chat)! Open API [extracts both images *and* text](https://platform.openai.com/docs/guides/pdf-files?api-mode=chat#how-it-works) from the document and feeds it to the model for you. This would simplify my code and provide even more context to the model, a double win. 
 
-There was only one problem - PDF upload requires use of the [Responses API](https://platform.openai.com/docs/api-reference/responses). This is OpenAI's most up to date API, replacing the (still widely used) ChatCompletions and Assistants APIs which came before it. Unfortunately, Github Models [only supports the Chat Completions](https://docs.github.com/en/rest/models/inference?apiVersion=2022-11-28#run-an-inference-request) API. In addition to this, I had been authenticating with a Personal Access Token which was fine for testing but not an ideal solution as we move towards production.
+There was only one problem - PDF upload requires use of the [Responses API](https://platform.openai.com/docs/api-reference/responses). This is OpenAI's most up to date API, replacing the (still widely used) ChatCompletions and Assistants APIs which came before it. Unfortunately, Github Models [only supports the Chat Completions](https://docs.github.com/en/rest/models/inference?apiVersion=2022-11-28#run-an-inference-request) API. In addition to this, I had been authenticating with a Personal Access Token which was fine for testing but not an ideal solution as we moved towards production.
 
-For both of these reasons, I decided to look at Microsoft's [AI Foundry](https://learn.microsoft.com/en-us/azure/ai-foundry/what-is-azure-ai-foundry) enterprise offering. This both [supports the Responses API](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses?tabs=python-key) and allows authenticating with [Azure credentials](https://learn.microsoft.com/en-us/azure/ai-foundry/quickstarts/get-started-code?tabs=csharp#set-up-your-environment) via e.g. the CLI or, eventually, managed identity in App Service. It's also tied into the billing for the rest of our Azure services and has full featured [VSCode integration](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/get-started-projects-vs-code), so acted as a great replacement for Github Models. 
+For both of these reasons, I decided to look at Microsoft's [AI Foundry](https://learn.microsoft.com/en-us/azure/ai-foundry/what-is-azure-ai-foundry) enterprise offering. This both [supports the Responses API](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses?tabs=python-key) and allows authenticating with [Azure credentials](https://learn.microsoft.com/en-us/azure/ai-foundry/quickstarts/get-started-code?tabs=csharp#set-up-your-environment). It's also tied into the billing for the rest of our Azure services and has full featured [VSCode integration](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/get-started-projects-vs-code), so acted as a great replacement for Github Models. 
 
 ![AI Foundry](/assets/ai-foundry.png)
 
@@ -347,7 +353,7 @@ let tryExtractDocument (options : AgentFrameworkOptions) (docData : DocumentData
 
 It's never been easier to get up and running with your own agent-based software. There are so many powerful small models and orchestration frameworks, convenient local tooling and cheap cloud hosting options that you can go from idea to prototype in no time. With that said, there are so many options and ways of tackling the problem that it can feel overwhelming. That's before you even consider how quickly the ecosystem is developing and changing underneath you.
 
-In these situations, as in most other software development challenges, I find the best approach is to balance exploration and exploitation to understand the landscape and make meaningful progress towards your goals. Focus on the activities which will [resolve the most amount of uncertainty for the least amount of risk](https://www.youtube.com/watch?v=bk_xCikDUDQ), then take the simplest path possible given what you've learnt.
+In these situations, as in most other software development challenges, I find the best approach is to try to balance exploration and exploitation, understanding the landscape and making meaningful progress towards your goals. Focus on the activities which will [resolve the most amount of uncertainty for the least amount of risk](https://www.youtube.com/watch?v=bk_xCikDUDQ), then take the simplest path possible given what you've learnt.
 
 Of course, a working demo is only the start of the journey. Following on, you need to consider e.g.
 - How will I expose the functionality to users?
