@@ -14,7 +14,7 @@ date:   2025-11-03 13:51:46 +0000
 
 I recently took on a challenging but tractable task.
 
-The question, at least on the surface, was simple - can I use AI to speed up the time consuming, manual process of looking through heterogeneous documents to pick out the values and terms for manual entry.
+The question, at least on the surface, was simple - can I use AI to speed up the time consuming, manual process of looking through heterogeneous documents to pick out the values and terms for manual entry?
 
 This kind of problem is a great use case for LLMs / v(ision) LLMs as it leans into their strengths - understanding the context of a document. It is also something for which it would be extremely difficult, if not impossible, to program a robust manual routine - the variation in layout and content of the documents is just too vast.
 
